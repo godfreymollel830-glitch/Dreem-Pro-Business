@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dreem Pro Business</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:#f0fdf4;color:#1a2e05}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:#f0fdf4}
+::-webkit-scrollbar-thumb{background:#86efac;border-radius:10px}
+@keyframes slideIn{from{transform:translateX(120px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.page{animation:fadeIn .3s ease}
+button:active{transform:scale(.97)}
+input:focus,select:focus{outline:none;border-color:#15803d!important}
+table{border-collapse:collapse;width:100%}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const{useState,useEffect,useCallback,useRef}=React;
+
+// ── COLORS ──
+const C={
+  primary:"#15803d",light:"#16a34a",dark:"#14532d",
+  accent:"#22c55e",alight:"#4ade80",
+  bg:"#f0fdf4",card:"#ffffff",
+  text:"#1a2e05",muted:"#4b7a38",
+  border:"#bbf7d0",
+  red:"#ef4444",yellow:"#f59e0b",blue:"#3b82f6",purple:"#8b5cf6",orange:"#f97316",
+  chart:["#15803d","#22c55e","#4ade80","#f59e0b","#3b82f6","#8b5cf6","#f97316"]
+};
+
+// ── TRANSLATIONS ──
+const T={
+en:{app:"Dreem Pro Business",tag:"Smart Business Management",
+login:"Login",logout:"Logout",email:"Email",pass:"Password",
+dash:"Dashboard",inv:"Inventory",sales:"Sales",exp:"Expenses",
+rep:"Reports",notif:"Notifications",users:"Users",
+rev:"Total Revenue",tex:"Total Expenses",profit:"Net Profit",prods:"Products",
+addProd:"Add Product",editProd:"Edit Product",
+pname:"Product Name",buy:"Buying Price",sell:"Selling Price",
+qty:"Quantity",cat:"Category",expiry:"Expiry Date",
+instock:"In Stock",low:"Low Stock",out:"Out of Stock",
+recSale:"Record Sale",pay:"Payment Method",cash:"Cash",mobile:"Mobile Money",
+receipt:"Receipt",addExp:"Add Expense",desc:"Description",date:"Date",
+daily:"Daily",weekly:"Weekly",monthly:"Monthly",
+top:"Top Products",loss:"Loss Alert",forecast:"Stock Forecast",
+addUser:"Add User",name:"Name",role:"Role",
+save:"Save",cancel:"Cancel",del:"Delete",edit:"Edit",
+search:"Search",nodata:"No data",welcome:"Welcome back",
+budget:"Monthly Budget",units:"units",sold:"sold",days:"days left",
+mark:"Mark Read",clear:"Clear All",
+},
+sw:{app:"Dreem Pro Biashara",tag:"Usimamizi wa Biashara wa Kisasa",
+login:"Ingia",logout:"Toka",email:"Barua Pepe",pass:"Nywila",
+dash:"Dashibodi",inv:"Hifadhi",sales:"Mauzo",exp:"Matumizi",
+rep:"Ripoti",notif:"Arifa",users:"Watumiaji",
+rev:"Mapato Yote",tex:"Matumizi Yote",profit:"Faida Halisi",prods:"Bidhaa",
+addProd:"Ongeza Bidhaa",editProd:"Hariri Bidhaa",
+pname:"Jina la Bidhaa",buy:"Bei ya Kununua",sell:"Bei ya Kuuza",
+qty:"Idadi",cat:"Kategoria",expiry:"Tarehe ya Kuisha",
+instock:"Ipo Hifadhini",low:"Hifadhi Chini",out:"Haipatikani",
+recSale:"Rekodi Mauzo",pay:"Njia ya Malipo",cash:"Taslimu",mobile:"Pesa za Simu",
+receipt:"Risiti",addExp:"Ongeza Matumizi",desc:"Maelezo",date:"Tarehe",
+daily:"Kila Siku",weekly:"Wiki",monthly:"Mwezi",
+top:"Bidhaa Bora",loss:"Onyo la Hasara",forecast:"Utabiri wa Hifadhi",
+addUser:"Ongeza Mtumiaji",name:"Jina",role:"Jukumu",
+save:"Hifadhi",cancel:"Ghairi",del:"Futa",edit:"Hariri",
+search:"Tafuta",nodata:"Hakuna data",welcome:"Karibu tena",
+budget:"Bajeti ya Mwezi",units:"vitengo",sold:"vimeuzwa",days:"siku zimebaki",
+mark:"Weka Imesomwa",clear:"Futa Zote",
+}};
+
+// ── DEMO DATA ──
+const USERS=[
+  {id:1,name:"Alex Dreem",email:"admin@dreem.com",password:"admin123",role:"admin",phone:"+255 712 000001",active:true},
+  {id:2,name:"Sarah Manager",email:"manager@dreem.com",password:"mgr123",role:"manager",phone:"+255 712 000002",active:true},
+  {id:3,name:"John Staff",email:"staff@dreem.com",password:"staff123",role:"staff",phone:"+255 712 000003",active:true},
+];
+const PRODS=[
+  {id:1,name:"Uji wa Mchele",buy:2500,sell:3500,qty:45,cat:"Food",expiry:"2025-12-31",sold:120},
+  {id:2,name:"Paracetamol 500mg",buy:800,sell:1200,qty:4,cat:"Medicine",expiry:"2026-06-30",sold:85},
+  {id:3,name:"Sukari 1kg",buy:3000,sell:4000,qty:3,cat:"Food",expiry:"2026-03-15",sold:200},
+  {id:4,name:"Simu Cover",buy:5000,sell:8000,qty:22,cat:"Electronics",expiry:null,sold:45},
+  {id:5,name:"Dawa ya Malaria",buy:4500,sell:6500,qty:15,cat:"Medicine",expiry:"2025-09-30",sold:60},
+  {id:6,name:"Mafuta ya Kupikia",buy:7000,sell:9500,qty:0,cat:"Food",expiry:"2026-01-20",sold:95},
+];
+const todayStr=()=>new Date().toISOString().split("T")[0];
+const SALES=Array.from({length:30},(_,i)=>({
+  id:i+1,pid:PRODS[i%6].id,pname:PRODS[i%6].name,
+  qty:Math.floor(Math.random()*4)+1,
+  amount:PRODS[i%6].sell*(Math.floor(Math.random()*4)+1),
+  pay:i%3===0?"cash":i%3===1?"mobile":"other",
+  date:new Date(Date.now()-(29-i)*86400000).toISOString(),
+  rno:`RCP-${1000+i}`,uid:1
+}));
+const EXPS=Array.from({length:12},(_,i)=>({
+  id:i+1,
+  desc:["Rent","Electricity","Water","Transport","Packaging","Staff Salary","Internet"][i%7],
+  amount:[250000,45000,15000,20000,30000,150000,25000][i%7],
+  date:new Date(Date.now()-(11-i)*86400000).toISOString(),
+  cat:["Fixed","Utility","Utility","Variable","Variable","Fixed","Utility"][i%7]
+}));
+
+// ── UTILS ──
+const fmt=n=>new Intl.NumberFormat("en-US").format(Math.round(n||0));
+const fmtC=n=>`TZS ${fmt(n)}`;
+const dayLabel=iso=>new Date(iso).toLocaleDateString("en-US",{month:"short",day:"numeric"});
+const expiryDays=d=>{if(!d)return null;return Math.ceil((new Date(d)-new Date())/86400000)};
+
+// ── MINI COMPONENTS ──
+const Badge=({children,color=C.primary})=>(
+  <span style={{background:color+"18",color,borderRadius:20,padding:"2px 10px",fontSize:12,fontWeight:700}}>{children}</span>
+);
+const Btn=({children,onClick,v="primary",s="md",style,disabled})=>{
+  const vs={primary:{background:C.primary,color:"#fff",border:"none"},
+    secondary:{background:"transparent",color:C.primary,border:`2px solid ${C.primary}`},
+    danger:{background:C.red,color:"#fff",border:"none"},
+    ghost:{background:C.bg,color:C.text,border:`1px solid ${C.border}`}};
+  const ss={sm:"5px 11px",md:"9px 20px",lg:"12px 28px"};
+  return<button onClick={onClick} disabled={disabled} style={{
+    ...vs[v],padding:ss[s],borderRadius:10,fontWeight:700,cursor:disabled?"not-allowed":"pointer",
+    fontSize:s==="sm"?12:14,transition:"all .2s",opacity:disabled?.6:1,fontFamily:"inherit",...style
+  }}>{children}</button>
+};
+const Inp=({label,value,onChange,type="text",req,ph,style})=>(
+  <div style={{marginBottom:14}}>
+    {label&&<label style={{display:"block",fontSize:13,fontWeight:700,color:C.muted,marginBottom:5}}>{label}{req&&" *"}</label>}
+    <input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={ph} required={req}
+      style={{width:"100%",padding:"9px 14px",borderRadius:10,fontSize:14,border:`1.5px solid ${C.border}`,
+        background:C.bg,color:C.text,fontFamily:"inherit",boxSizing:"border-box",...style}}/>
+  </div>
+);
+const Sel=({label,value,onChange,opts})=>(
+  <div style={{marginBottom:14}}>
+    {label&&<label style={{display:"block",fontSize:13,fontWeight:700,color:C.muted,marginBottom:5}}>{label}</label>}
+    <select value={value} onChange={e=>onChange(e.target.value)}
+      style={{width:"100%",padding:"9px 14px",borderRadius:10,fontSize:14,border:`1.5px solid ${C.border}`,
+        background:C.bg,color:C.text,fontFamily:"inherit",boxSizing:"border-box"}}>
+      {opts.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}
+    </select>
+  </div>
+);
+const Card=({children,style})=>(
+  <div style={{background:C.card,borderRadius:16,padding:20,
+    boxShadow:"0 2px 12px rgba(21,128,61,.08)",border:`1px solid ${C.border}`,...style}}>{children}</div>
+);
+const Modal=({show,onClose,title,children,w=460})=>{
+  if(!show)return null;
+  return<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:1000,
+    display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={onClose}>
+    <div style={{background:C.card,borderRadius:20,padding:28,width:"100%",maxWidth:w,
+      maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.2)"}} onClick={e=>e.stopPropagation()}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+        <h3 style={{margin:0,color:C.dark,fontSize:18}}>{title}</h3>
+        <button onClick={onClose} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:C.muted}}>✕</button>
+      </div>
+      {children}
+    </div>
+  </div>
+};
+const Toast=({msg,type,onClose})=>(
+  <div style={{position:"fixed",bottom:24,right:24,zIndex:9999,
+    background:type==="success"?C.primary:type==="warning"?C.yellow:C.red,
+    color:"#fff",borderRadius:14,padding:"14px 20px",boxShadow:"0 8px 30px rgba(0,0,0,.2)",
+    maxWidth:340,display:"flex",alignItems:"center",gap:10,animation:"slideIn .3s ease"}}>
+    <span style={{fontSize:20}}>{type==="success"?"✅":type==="warning"?"⚠️":"❌"}</span>
+    <span style={{fontWeight:700,fontSize:14}}>{msg}</span>
+    <button onClick={onClose} style={{background:"none",border:"none",color:"#fff",cursor:"pointer",marginLeft:8,fontSize:18}}>✕</button>
+  </div>
+);
+
+// ── MINI BAR CHART ──
+const MiniBar=({data,color=C.primary,h=80})=>{
+  const max=Math.max(...data.map(d=>d.v),1);
+  return<div style={{display:"flex",alignItems:"flex-end",gap:3,height:h}}>
+    {data.map((d,i)=>(
+      <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+        <div style={{width:"100%",background:color,borderRadius:"4px 4px 0 0",
+          height:`${(d.v/max)*h*0.85}px`,minHeight:2,transition:"height .5s"}}/>
+        <span style={{fontSize:9,color:C.muted,transform:"rotate(-30deg)",whiteSpace:"nowrap"}}>{d.l}</span>
+      </div>
+    ))}
+  </div>
+};
+const MiniLine=({data,color=C.primary,h=80})=>{
+  const max=Math.max(...data.map(d=>d.v),1);
+  const pts=data.map((d,i)=>`${(i/(data.length-1))*200},${h-(d.v/max)*(h-10)}`).join(" ");
+  return<svg width="100%" viewBox={`0 0 200 ${h}`} preserveAspectRatio="none" style={{height:h}}>
+    <polyline points={pts} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <polyline points={`0,${h} ${pts} 200,${h}`} fill={color+"25"} stroke="none"/>
+  </svg>
+};
+const MiniPie=({data,r=50})=>{
+  let angle=0;
+  const total=data.reduce((a,b)=>a+b.v,0)||1;
+  const slices=data.map((d,i)=>{
+    const pct=d.v/total,a=pct*2*Math.PI;
+    const x1=r+r*Math.sin(angle),y1=r-r*Math.cos(angle);
+    angle+=a;
+    const x2=r+r*Math.sin(angle),y2=r-r*Math.cos(angle);
+    const large=pct>.5?1:0;
+    return<path key={i} d={`M${r},${r} L${x1},${y1} A${r},${r} 0 ${large},1 ${x2},${y2} Z`}
+      fill={C.chart[i%C.chart.length]}/>;
+  });
+  return<svg width={r*2} height={r*2}>{slices}</svg>
+};
+
+// ── LOGIN ──
+const Login=({onLogin,lang,setLang})=>{
+  const t=T[lang];
+  const [email,setEmail]=useState("admin@dreem.com");
+  const [pass,setPass]=useState("admin123");
+  const [err,setErr]=useState("");
+  const go=()=>{
+    const u=USERS.find(u=>u.email===email&&u.password===pass);
+    if(u)onLogin(u); else setErr("Invalid credentials");
+  };
+  return<div style={{minHeight:"100vh",background:`linear-gradient(135deg,${C.dark},${C.primary},${C.light})`,
+    display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+    <div style={{background:"#fff",borderRadius:24,padding:"40px 36px",maxWidth:420,width:"100%",
+      boxShadow:"0 30px 80px rgba(0,0,0,.25)"}}>
+      <div style={{textAlign:"center",marginBottom:32}}>
+        <div style={{fontSize:52,marginBottom:8}}>🌿</div>
+        <h1 style={{color:C.dark,margin:0,fontSize:28,fontWeight:900}}>{t.app}</h1>
+        <p style={{color:C.muted,margin:"6px 0 0",fontSize:14}}>{t.tag}</p>
+      </div>
+      <Inp label={t.email} value={email} onChange={setEmail} type="email"/>
+      <Inp label={t.pass} value={pass} onChange={setPass} type="password"/>
+      {err&&<div style={{color:C.red,fontSize:13,marginBottom:12,padding:"8px 12px",background:"#fef2f2",borderRadius:8}}>{err}</div>}
+      <Btn onClick={go} style={{width:"100%",padding:12,fontSize:16}}>{t.login}</Btn>
+      <div style={{marginTop:20,padding:16,background:C.bg,borderRadius:12,fontSize:12,color:C.muted,lineHeight:1.8}}>
+        <strong>Demo Accounts:</strong><br/>
+        👑 admin@dreem.com / admin123<br/>
+        📊 manager@dreem.com / mgr123<br/>
+        👤 staff@dreem.com / staff123
+      </div>
+      <div style={{display:"flex",gap:8,marginTop:12,justifyContent:"center"}}>
+        {["en","sw"].map(l=><Btn key={l} v={lang===l?"primary":"ghost"} s="sm" onClick={()=>setLang(l)}>
+          {l==="en"?"🇬🇧 EN":"🇹🇿 SW"}
+        </Btn>)}
+      </div>
+    </div>
+  </div>
+};
+
+// ── DASHBOARD ──
+const Dashboard=({prods,sales,exps,notifs,t})=>{
+  const rev=sales.reduce((a,b)=>a+b.amount,0);
+  const tex=exps.reduce((a,b)=>a+b.amount,0);
+  const profit=rev-tex;
+  const lowStock=prods.filter(p=>p.qty>0&&p.qty<=5);
+  const outStock=prods.filter(p=>p.qty===0);
+  const topProds=[...prods].sort((a,b)=>b.sold-a.sold).slice(0,5);
+  const last7=Array.from({length:7},(_,i)=>{
+    const d=new Date(Date.now()-(6-i)*86400000);
+    const ds=d.toISOString().split("T")[0];
+    const rv=sales.filter(s=>s.date.startsWith(ds)).reduce((a,b)=>a+b.amount,0);
+    return{l:dayLabel(d.toISOString()),v:rv};
+  });
+  const payPie=[
+    {v:sales.filter(s=>s.pay==="cash").reduce((a,b)=>a+b.amount,0)},
+    {v:sales.filter(s=>s.pay==="mobile").reduce((a,b)=>a+b.amount,0)},
+    {v:sales.filter(s=>s.pay==="other").reduce((a,b)=>a+b.amount,0)},
+  ].filter(p=>p.v>0);
+
+  return<div className="page">
+    {/* Stats */}
+    <div style={{display:"flex",gap:14,flexWrap:"wrap",marginBottom:20}}>
+      {[
+        {l:t.rev,v:fmtC(rev),icon:"💰",c:C.primary,tr:"+12%"},
+        {l:t.tex,v:fmtC(tex),icon:"📤",c:C.yellow,tr:"-5%"},
+        {l:t.profit,v:fmtC(profit),icon:"📈",c:profit>=0?C.accent:C.red,tr:profit>=0?"+8%":"-8%"},
+        {l:t.prods,v:prods.length,icon:"📦",c:C.blue,sub:`${outStock.length} out of stock`},
+      ].map(s=>(
+        <Card key={s.l} style={{flex:1,minWidth:160,position:"relative",overflow:"hidden"}}>
+          <div style={{position:"absolute",right:14,top:14,fontSize:34,opacity:.1}}>{s.icon}</div>
+          <div style={{fontSize:11,color:C.muted,fontWeight:700,marginBottom:6}}>{s.l}</div>
+          <div style={{fontSize:22,fontWeight:900,color:s.c,lineHeight:1.2}}>{s.v}</div>
+          {s.tr&&<div style={{fontSize:11,color:s.c,marginTop:4,fontWeight:700}}>{s.tr} vs last period</div>}
+          {s.sub&&<div style={{fontSize:11,color:C.muted,marginTop:4}}>{s.sub}</div>}
+        </Card>
+      ))}
+    </div>
+
+    {/* Alerts */}
+    {lowStock.length>0&&<div style={{background:"#fef3c7",border:`1px solid ${C.yellow}`,borderRadius:12,
+      padding:"12px 16px",marginBottom:14,display:"flex",gap:10,alignItems:"center"}}>
+      <span style={{fontSize:20}}>⚠️</span>
+      <div><strong style={{color:"#92400e"}}>{t.low}:</strong>
+        <span style={{color:"#92400e",fontSize:13,marginLeft:6}}>
+          {lowStock.map(p=>`${p.name} (${p.qty} ${t.units})`).join(" • ")}
+        </span>
+      </div>
+    </div>}
+    {profit<0&&<div style={{background:"#fef2f2",border:`1px solid ${C.red}`,borderRadius:12,
+      padding:"12px 16px",marginBottom:14,display:"flex",gap:10,alignItems:"center"}}>
+      <span style={{fontSize:20}}>🚨</span>
+      <strong style={{color:C.red}}>{t.loss}: {fmtC(Math.abs(profit))} loss this period!</strong>
+    </div>}
+
+    {/* Charts Row */}
+    <div style={{display:"flex",gap:16,flexWrap:"wrap",marginBottom:16}}>
+      <Card style={{flex:2,minWidth:280}}>
+        <h3 style={{margin:"0 0 14px",color:C.dark,fontSize:15}}>📊 Revenue (Last 7 Days)</h3>
+        <MiniBar data={last7} color={C.primary} h={100}/>
+      </Card>
+      <Card style={{flex:1,minWidth:200}}>
+        <h3 style={{margin:"0 0 14px",color:C.dark,fontSize:15}}>💳 Payment Methods</h3>
+        <div style={{display:"flex",alignItems:"center",gap:16}}>
+          <MiniPie data={payPie} r={45}/>
+          <div style={{fontSize:12}}>
+            {["Cash","Mobile","Other"].map((l,i)=>(
+              <div key={l} style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
+                <span style={{width:10,height:10,background:C.chart[i],borderRadius:3,display:"inline-block"}}/>
+                <span style={{color:C.muted}}>{l}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Card>
+    </div>
+
+    {/* Bottom Row */}
+    <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
+      <Card style={{flex:1,minWidth:220}}>
+        <h3 style={{margin:"0 0 14px",color:C.dark,fontSize:15}}>🏆 {t.top}</h3>
+        {topProds.map((p,i)=>(
+          <div key={p.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+            <div style={{width:24,height:24,borderRadius:8,background:C.chart[i],
+              display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:900,fontSize:11}}>{i+1}</div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:13,fontWeight:700}}>{p.name}</div>
+              <div style={{height:4,background:C.border,borderRadius:4,marginTop:3}}>
+                <div style={{height:4,background:C.chart[i],borderRadius:4,
+                  width:`${(p.sold/topProds[0].sold)*100}%`}}/>
+              </div>
+            </div>
+            <Badge color={C.chart[i]}>{p.sold}</Badge>
+          </div>
+        ))}
+      </Card>
+
+      <Card style={{flex:1,minWidth:220}}>
+        <h3 style={{margin:"0 0 14px",color:C.dark,fontSize:15}}>📦 {t.forecast}</h3>
+        {prods.filter(p=>p.qty>0&&p.qty<=20).map(p=>{
+          const dl=Math.ceil(p.qty/((p.sold/30)||1));
+          const col=dl<=3?C.red:dl<=7?C.yellow:C.primary;
+          return<div key={p.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",
+            marginBottom:8,padding:"7px 10px",background:col+"10",borderRadius:10,borderLeft:`3px solid ${col}`}}>
+            <span style={{fontSize:13,fontWeight:700}}>{p.name}</span>
+            <span style={{fontSize:12,color:col,fontWeight:700}}>~{dl} {t.days}</span>
+          </div>
+        })}
+      </Card>
+
+      <Card style={{flex:1,minWidth:220}}>
+        <h3 style={{margin:"0 0 14px",color:C.dark,fontSize:15}}>🔔 Recent Alerts</h3>
+        {notifs.slice(0,5).map(n=>(
+          <div key={n.id} style={{display:"flex",gap:10,marginBottom:10,padding:"7px 10px",
+            background:n.read?"transparent":C.accent+"10",borderRadius:10}}>
+            <span style={{fontSize:18}}>{n.icon}</span>
+            <div>
+              <div style={{fontSize:13,fontWeight:n.read?400:700}}>{n.msg}</div>
+              <div style={{fontSize:11,color:C.muted}}>{dayLabel(n.date)}</div>
+            </div>
+          </div>
+        ))}
+      </Card>
+    </div>
+  </div>
+};
+
+// ── INVENTORY ──
+const Inventory=({prods,setProds,addNotif,t})=>{
+  const [search,setSearch]=useState("");
+  const [showM,setShowM]=useState(false);
+  const [ed,setEd]=useState(null);
+  const [del,setDel]=useState(null);
+  const [form,setForm]=useState({name:"",buy:"",sell:"",qty:"",cat:"Food",expiry:""});
+  const cats=["Food","Medicine","Electronics","Clothing","Other"];
+  const filt=prods.filter(p=>p.name.toLowerCase().includes(search.toLowerCase()));
+
+  const openAdd=()=>{setEd(null);setForm({name:"",buy:"",sell:"",qty:"",cat:"Food",expiry:""});setShowM(true)};
+  const openEdit=p=>{setEd(p);setForm({name:p.name,buy:p.buy,sell:p.sell,qty:p.qty,cat:p.cat,expiry:p.expiry||""});setShowM(true)};
+  const save=()=>{
+    if(!form.name||!form.sell)return;
+    const prod={name:form.name,buy:+form.buy,sell:+form.sell,qty:+form.qty,cat:form.cat,expiry:form.expiry||null,sold:ed?.sold||0};
+    if(ed)setProds(p=>p.map(x=>x.id===ed.id?{...prod,id:x.id}:x));
+    else{
+      setProds(p=>[...p,{...prod,id:Date.now()}]);
+      if(+form.qty<=5)addNotif({icon:"⚠️",msg:`${form.name} — only ${form.qty} ${t.units} added`,type:"warning"});
+    }
+    setShowM(false);
+  };
+  const delP=id=>{setProds(p=>p.filter(x=>x.id!==id));setDel(null)};
+
+  const stockStatus=p=>{
+    if(p.qty===0)return{l:t.out,c:C.red};
+    if(p.qty<=5)return{l:t.low,c:C.yellow};
+    return{l:t.instock,c:C.accent};
+  };
+  const expiryStatus=d=>{
+    const days=expiryDays(d);
+    if(days===null)return null;
+    if(days<0)return{l:"Expired",c:C.red};
+    if(days<=30)return{l:`${days}d`,c:C.yellow};
+    return{l:`${days}d`,c:C.accent};
+  };
+
+  return<div className="page">
+    <div style={{display:"flex",gap:12,marginBottom:16,flexWrap:"wrap"}}>
+      <input value={search} onChange={e=>setSearch(e.target.value)} placeholder={`🔍 ${t.search}...`}
+        style={{flex:1,minWidth:180,padding:"9px 14px",borderRadius:10,border:`1.5px solid ${C.border}`,
+          fontSize:14,background:C.bg,fontFamily:"inherit"}}/>
+      <Btn onClick={openAdd}>+ {t.addProd}</Btn>
+    </div>
+
+    {/* Summary */}
+    <div style={{display:"flex",gap:12,marginBottom:16,flexWrap:"wrap"}}>
+      {[
+        {l:"Total",v:prods.length,c:C.blue},
+        {l:"In Stock",v:prods.filter(p=>p.qty>0).length,c:C.accent},
+        {l:"Low Stock",v:prods.filter(p=>p.qty>0&&p.qty<=5).length,c:C.yellow},
+        {l:"Out of Stock",v:prods.filter(p=>p.qty===0).length,c:C.red},
+      ].map(s=>(
+        <div key={s.l} style={{flex:1,minWidth:100,background:s.c+"12",border:`1px solid ${s.c}30`,
+          borderRadius:12,padding:"10px 14px",textAlign:"center"}}>
+          <div style={{fontSize:22,fontWeight:900,color:s.c}}>{s.v}</div>
+          <div style={{fontSize:11,color:C.muted,fontWeight:700}}>{s.l}</div>
+        </div>
+      ))}
+    </div>
+
+    <Card style={{padding:0,overflow:"hidden"}}>
+      <div style={{overflowX:"auto"}}>
+        <table>
+          <thead>
+            <tr style={{background:C.dark}}>
+              {[t.pname,t.cat,t.buy,t.sell,t.qty,t.expiry,"Status",""].map(h=>(
+                <th key={h} style={{padding:"12px 14px",textAlign:"left",color:"#fff",fontSize:13,fontWeight:700,whiteSpace:"nowrap"}}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filt.map((p,i)=>{
+              const st=stockStatus(p);
+              const ex=expiryStatus(p.expiry);
+              return<tr key={p.id} style={{background:i%2===0?C.bg:"#fff",borderBottom:`1px solid ${C.border}`}}>
+                <td style={{padding:"11px 14px",fontWeight:700}}>{p.name}</td>
+                <td style={{padding:"11px 14px"}}><Badge>{p.cat}</Badge></td>
+                <td style={{padding:"11px 14px",fontSize:13}}>{fmtC(p.buy)}</td>
+                <td style={{padding:"11px 14px",fontWeight:700,color:C.primary}}>{fmtC(p.sell)}</td>
+                <td style={{padding:"11px 14px",textAlign:"center",fontWeight:900,color:p.qty<=5?C.red:C.text}}>{p.qty}</td>
+                <td style={{padding:"11px 14px"}}>{ex?<Badge color={ex.c}>{ex.l}</Badge>:<span style={{color:C.muted}}>—</span>}</td>
+                <td style={{padding:"11px 14px"}}><Badge color={st.c}>{st.l}</Badge></td>
+                <td style={{padding:"11px 14px"}}>
+                  <div style={{display:"flex",gap:5}}>
+                    <Btn s="sm" v="ghost" onClick={()=>openEdit(p)}>✏️</Btn>
+                    <Btn s="sm" v="danger" onClick={()=>setDel(p)}>🗑️</Btn>
+                  </div>
+                </td>
+              </tr>
+            })}
+            {filt.length===0&&<tr><td colSpan={8} style={{padding:40,textAlign:"center",color:C.muted}}>{t.nodata}</td></tr>}
+          </tbody>
+        </table>
+      </div>
+    </Card>
+
+    <Modal show={showM} onClose={()=>setShowM(false)} title={ed?t.editProd:t.addProd}>
+      <Inp label={t.pname} value={form.name} onChange={v=>setForm(f=>({...f,name:v}))} req/>
+      <div style={{display:"flex",gap:12}}>
+        <div style={{flex:1}}><Inp label={t.buy} value={form.buy} onChange={v=>setForm(f=>({...f,buy:v}))} type="number"/></div>
+        <div style={{flex:1}}><Inp label={t.sell} value={form.sell} onChange={v=>setForm(f=>({...f,sell:v}))} type="number" req/></div>
+      </div>
+      <div style={{display:"flex",gap:12}}>
+        <div style={{flex:1}}><Inp label={t.qty} value={form.qty} onChange={v=>setForm(f=>({...f,qty:v}))} type="number"/></div>
+        <div style={{flex:1}}><Sel label={t.cat} value={form.cat} onChange={v=>setForm(f=>({...f,cat:v}))} opts={cats.map(c=>({v:c,l:c}))}/></div>
+      </div>
+      <Inp label={t.expiry} value={form.expiry} onChange={v=>setForm(f=>({...f,expiry:v}))} type="date"/>
+      <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+        <Btn v="ghost" onClick={()=>setShowM(false)}>{t.cancel}</Btn>
+        <Btn onClick={save}>{t.save}</Btn>
+      </div>
+    </Modal>
+
+    <Modal show={!!del} onClose={()=>setDel(null)} title={t.del} w={360}>
+      <p>Delete <strong>{del?.name}</strong>? This cannot be undone.</p>
+      <div style={{display:"flex",gap:10,justifyContent:"flex-end",marginTop:16}}>
+        <Btn v="ghost" onClick={()=>setDel(null)}>{t.cancel}</Btn>
+        <Btn v="danger" onClick={()=>delP(del.id)}>{t.del}</Btn>
+      </div>
+    </Modal>
+  </div>
+};
+
+// ── SALES ──
+const Sales=({sales,setSales,prods,setProds,addNotif,user,t})=>{
+  const [showM,setShowM]=useState(false);
+  const [rcpt,setRcpt]=useState(null);
+  const [search,setSearch]=useState("");
+  const [form,setForm]=useState({pid:"",qty:1,pay:"cash",cname:"",tax:0});
+  const filt=[...sales].filter(s=>s.pname.toLowerCase().includes(search.toLowerCase()))
+    .sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const sel=prods.find(p=>p.id===+form.pid);
+  const sub=sel?sel.sell*form.qty:0;
+  const taxAmt=(sub*form.tax)/100;
+  const total=sub+taxAmt;
+
+  const record=()=>{
+    if(!form.pid||!sel)return;
+    if(sel.qty<form.qty){addNotif({icon:"❌",msg:`Insufficient stock for ${sel.name}`,type:"danger"});return;}
+    const sale={id:Date.now(),pid:sel.id,pname:sel.name,qty:+form.qty,amount:total,
+      pay:form.pay,date:new Date().toISOString(),rno:`RCP-${1000+sales.length+1}`,
+      uid:user.id,cname:form.cname,tax:taxAmt};
+    setSales(p=>[sale,...p]);
+    setProds(p=>p.map(x=>{
+      if(x.id===sel.id){
+        const nq=x.qty-+form.qty;
+        if(nq<=5)addNotif({icon:"⚠️",msg:`${x.name} — only ${nq} ${t.units} remaining`,type:"warning"});
+        return{...x,qty:nq,sold:(x.sold||0)+ +form.qty};
+      }return x;
+    }));
+    setRcpt(sale);setShowM(false);
+    setForm({pid:"",qty:1,pay:"cash",cname:"",tax:0});
+  };
+
+  return<div className="page">
+    <div style={{display:"flex",gap:12,marginBottom:16,flexWrap:"wrap"}}>
+      <input value={search} onChange={e=>setSearch(e.target.value)} placeholder={`🔍 ${t.search}...`}
+        style={{flex:1,minWidth:180,padding:"9px 14px",borderRadius:10,border:`1.5px solid ${C.border}`,fontSize:14,background:C.bg,fontFamily:"inherit"}}/>
+      <Btn onClick={()=>setShowM(true)}>+ {t.recSale}</Btn>
+    </div>
+
+    <div style={{display:"flex",gap:14,marginBottom:16,flexWrap:"wrap"}}>
+      {[
+        {l:"Today's Sales",v:fmtC(sales.filter(s=>s.date.startsWith(todayStr())).reduce((a,b)=>a+b.amount,0)),c:C.primary},
+        {l:"Today's Transactions",v:sales.filter(s=>s.date.startsWith(todayStr())).length,c:C.accent},
+        {l:"Total Revenue",v:fmtC(sales.reduce((a,b)=>a+b.amount,0)),c:C.blue},
+        {l:"Avg Sale",v:fmtC(sales.length?sales.reduce((a,b)=>a+b.amount,0)/sales.length:0),c:C.purple},
+      ].map(s=>(
+        <Card key={s.l} style={{flex:1,minWidth:140}}>
+          <div style={{fontSize:11,color:C.muted,fontWeight:700}}>{s.l}</div>
+          <div style={{fontSize:18,fontWeight:900,color:s.c,marginTop:4}}>{s.v}</div>
+        </Card>
+      ))}
+    </div>
+
+    <Card style={{padding:0,overflow:"hidden"}}>
+      <div style={{overflowX:"auto"}}>
+        <table>
+          <thead>
+            <tr style={{background:C.dark}}>
+              {["Receipt#","Product",t.qty,"Amount",t.pay,"Date",""].map(h=>(
+                <th key={h} style={{padding:"12px 14px",textAlign:"left",color:"#fff",fontSize:13,fontWeight:700,whiteSpace:"nowrap"}}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filt.map((s,i)=>(
+              <tr key={s.id} style={{background:i%2===0?C.bg:"#fff",borderBottom:`1px solid ${C.border}`}}>
+                <td style={{padding:"11px 14px",fontFamily:"monospace",color:C.primary,fontWeight:700,fontSize:13}}>{s.rno}</td>
+                <td style={{padding:"11px 14px",fontWeight:700}}>{s.pname}</td>
+                <td style={{padding:"11px 14px",textAlign:"center"}}>{s.qty}</td>
+                <td style={{padding:"11px 14px",fontWeight:700,color:C.primary}}>{fmtC(s.amount)}</td>
+                <td style={{padding:"11px 14px"}}><Badge color={s.pay==="cash"?C.primary:C.blue}>{s.pay}</Badge></td>
+                <td style={{padding:"11px 14px",fontSize:12,color:C.muted}}>{new Date(s.date).toLocaleString()}</td>
+                <td style={{padding:"11px 14px"}}><Btn s="sm" v="ghost" onClick={()=>setRcpt(s)}>🧾</Btn></td>
+              </tr>
+            ))}
+            {filt.length===0&&<tr><td colSpan={7} style={{padding:40,textAlign:"center",color:C.muted}}>{t.nodata}</td></tr>}
+          </tbody>
+        </table>
+      </div>
+    </Card>
+
+    <Modal show={showM} onClose={()=>setShowM(false)} title={t.recSale}>
+      <Sel label="Product" value={form.pid} onChange={v=>setForm(f=>({...f,pid:v}))}
+        opts={[{v:"",l:"-- Select Product --"},...prods.filter(p=>p.qty>0).map(p=>({v:p.id,l:`${p.name} (${p.qty} left)`}))]}/>
+      {sel&&<div style={{background:C.bg,borderRadius:10,padding:12,marginBottom:14,fontSize:13}}>
+        <strong>{sel.name}</strong> — Price: {fmtC(sel.sell)} | Stock: {sel.qty}
+      </div>}
+      <div style={{display:"flex",gap:12}}>
+        <div style={{flex:1}}><Inp label={t.qty} value={form.qty} onChange={v=>setForm(f=>({...f,qty:+v}))} type="number"/></div>
+        <div style={{flex:1}}><Inp label="Tax %" value={form.tax} onChange={v=>setForm(f=>({...f,tax:+v}))} type="number"/></div>
+      </div>
+      <Sel label={t.pay} value={form.pay} onChange={v=>setForm(f=>({...f,pay:v}))}
+        opts={[{v:"cash",l:t.cash},{v:"mobile",l:t.mobile},{v:"other",l:"Other"}]}/>
+      <Inp label="Customer Name (optional)" value={form.cname} onChange={v=>setForm(f=>({...f,cname:v}))}/>
+      {sel&&<div style={{background:C.dark,borderRadius:12,padding:14,color:"#fff",marginBottom:14}}>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}><span>Subtotal:</span><strong>{fmtC(sub)}</strong></div>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}><span>Tax ({form.tax}%):</span><strong>{fmtC(taxAmt)}</strong></div>
+        <div style={{display:"flex",justifyContent:"space-between",borderTop:"1px solid rgba(255,255,255,.3)",paddingTop:8}}>
+          <span>TOTAL:</span><strong style={{fontSize:18}}>{fmtC(total)}</strong>
+        </div>
+      </div>}
+      <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+        <Btn v="ghost" onClick={()=>setShowM(false)}>{t.cancel}</Btn>
+        <Btn onClick={record} disabled={!form.pid}>{t.recSale}</Btn>
+      </div>
+    </Modal>
+
+    <Modal show={!!rcpt} onClose={()=>setRcpt(null)} title="🧾 Receipt" w={360}>
+      {rcpt&&<div style={{fontFamily:"monospace"}}>
+        <div style={{textAlign:"center",marginBottom:16}}>
+          <div style={{fontSize:20,fontWeight:900,color:C.dark}}>🌿 DREEM PRO BUSINESS</div>
+          <div style={{fontSize:12,color:C.muted}}>Official Receipt</div>
+        </div>
+        <div style={{borderTop:"1px dashed #ccc",borderBottom:"1px dashed #ccc",padding:"12px 0",marginBottom:12}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:5,fontSize:13}}><span>Receipt#:</span><strong>{rcpt.rno}</strong></div>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:5,fontSize:13}}><span>Date:</span><span>{new Date(rcpt.date).toLocaleString()}</span></div>
+          {rcpt.cname&&<div style={{display:"flex",justifyContent:"space-between",fontSize:13}}><span>Customer:</span><span>{rcpt.cname}</span></div>}
+        </div>
+        <div style={{marginBottom:12}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:5,fontSize:13}}><span>{rcpt.pname}</span><span>x{rcpt.qty}</span></div>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:5,fontSize:13}}><span>Subtotal:</span><span>{fmtC(rcpt.amount-(rcpt.tax||0))}</span></div>
+          {rcpt.tax>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:13}}><span>Tax:</span><span>{fmtC(rcpt.tax)}</span></div>}
+          <div style={{display:"flex",justifyContent:"space-between",borderTop:"2px solid #000",paddingTop:8,fontWeight:900,marginTop:8}}>
+            <span>TOTAL:</span><span>{fmtC(rcpt.amount)}</span>
+          </div>
+        </div>
+        <div style={{textAlign:"center",padding:10,background:C.bg,borderRadius:8}}>
+          <Badge color={C.primary}>{rcpt.pay.toUpperCase()}</Badge>
+          <div style={{fontSize:11,color:C.muted,marginTop:6}}>Thank you for your business! 🌿</div>
+        </div>
+        <Btn style={{width:"100%",marginTop:12}} onClick={()=>window.print()}>🖨️ Print Receipt</Btn>
+      </div>}
+    </Modal>
+  </div>
+};
+
+// ── EXPENSES ──
+const Expenses=({exps,setExps,addNotif,t})=>{
+  const [showM,setShowM]=useState(false);
+  const [showB,setShowB]=useState(false);
+  const [budget,setBudget]=useState(500000);
+  const [budgetInp,setBudgetInp]=useState("500000");
+  const [form,setForm]=useState({desc:"",amount:"",date:todayStr(),cat:"Fixed"});
+
+  const mStr=new Date().toISOString().slice(0,7);
+  const monthExps=exps.filter(e=>e.date.startsWith(mStr));
+  const monthTotal=monthExps.reduce((a,b)=>a+b.amount,0);
+  const pct=Math.min(100,(monthTotal/budget)*100);
+
+  const byCat=exps.reduce((acc,e)=>{acc[e.cat]=(acc[e.cat]||0)+e.amount;return acc},{});
+  const pieData=Object.entries(byCat).map(([k,v])=>({name:k,v}));
+
+  const add=()=>{
+    if(!form.desc||!form.amount)return;
+    const exp={id:Date.now(),desc:form.desc,amount:+form.amount,date:form.date,cat:form.cat};
+    setExps(p=>[exp,...p]);
+    if(monthTotal+ +form.amount>budget)
+      addNotif({icon:"🚨",msg:`${t.budget} exceeded! Spent: ${fmtC(monthTotal+ +form.amount)}`,type:"danger"});
+    setShowM(false);
+    setForm({desc:"",amount:"",date:todayStr(),cat:"Fixed"});
+  };
+
+  return<div className="page">
+    <div style={{display:"flex",gap:12,marginBottom:16,flexWrap:"wrap",alignItems:"flex-end"}}>
+      <div style={{flex:1,minWidth:220}}>
+        <div style={{fontSize:13,fontWeight:700,color:C.muted,marginBottom:6}}>Monthly Budget Progress</div>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <div style={{flex:1,height:12,background:C.border,borderRadius:10,overflow:"hidden"}}>
+            <div style={{height:"100%",width:`${pct}%`,background:pct>90?C.red:pct>70?C.yellow:C.primary,
+              borderRadius:10,transition:"width .5s"}}/>
+          </div>
+          <span style={{fontWeight:800,color:pct>90?C.red:C.primary,minWidth:45,fontSize:13}}>{pct.toFixed(0)}%</span>
+        </div>
+        <div style={{fontSize:12,color:C.muted,marginTop:4}}>{fmtC(monthTotal)} / {fmtC(budget)}</div>
+      </div>
+      <div style={{display:"flex",gap:8}}>
+        <Btn v="ghost" onClick={()=>setShowB(true)}>⚙️ Budget</Btn>
+        <Btn onClick={()=>setShowM(true)}>+ {t.addExp}</Btn>
+      </div>
+    </div>
+
+    <div style={{display:"flex",gap:16,flexWrap:"wrap",marginBottom:16}}>
+      <Card style={{flex:1,minWidth:220}}>
+        <h3 style={{margin:"0 0 14px",color:C.dark,fontSize:15}}>Expense Breakdown</h3>
+        <div style={{display:"flex",alignItems:"center",gap:16,marginBottom:12}}>
+          <MiniPie data={pieData} r={40}/>
+          <div>
+            {pieData.map((p,i)=>(
+              <div key={p.name} style={{display:"flex",alignItems:"center",gap:6,marginBottom:5,fontSize:13}}>
+                <span style={{width:10,height:10,background:C.chart[i],borderRadius:3,display:"inline-block"}}/>
+                <span style={{color:C.muted}}>{p.name}</span>
+                <strong style={{marginLeft:"auto",paddingLeft:12}}>{fmtC(p.v)}</strong>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Card>
+
+      <Card style={{flex:2,minWidth:280,padding:0,overflow:"hidden"}}>
+        <div style={{padding:"14px 18px",borderBottom:`1px solid ${C.border}`}}>
+          <h3 style={{margin:0,color:C.dark,fontSize:15}}>Expense History</h3>
+        </div>
+        <div style={{overflowX:"auto"}}>
+          <table>
+            <thead>
+              <tr style={{background:C.bg}}>
+                {[t.desc,"Category","Amount",t.date].map(h=>(
+                  <th key={h} style={{padding:"10px 14px",textAlign:"left",fontSize:12,fontWeight:700,color:C.muted}}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {[...exps].sort((a,b)=>new Date(b.date)-new Date(a.date)).map((e,i)=>(
+                <tr key={e.id} style={{borderBottom:`1px solid ${C.border}`,background:i%2===0?"#fff":C.bg}}>
+                  <td style={{padding:"10px 14px",fontWeight:700,fontSize:13}}>{e.desc}</td>
+                  <td style={{padding:"10px 14px"}}><Badge>{e.cat}</Badge></td>
+                  <td style={{padding:"10px 14px",color:C.red,fontWeight:700}}>{fmtC(e.amount)}</td>
+                  <td style={{padding:"10px 14px",fontSize:12,color:C.muted}}>{dayLabel(e.date)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
+
+    <Modal show={showM} onClose={()=>setShowM(false)} title={t.addExp}>
+      <Inp label={t.desc} value={form.desc} onChange={v=>setForm(f=>({...f,desc:v}))} req/>
+      <div style={{display:"flex",gap:12}}>
+        <div style={{flex:1}}><Inp label="Amount (TZS)" value={form.amount} onChange={v=>setForm(f=>({...f,amount:v}))} type="number" req/></div>
+        <div style={{flex:1}}><Inp label={t.date} value={form.date} onChange={v=>setForm(f=>({...f,date:v}))} type="date"/></div>
+      </div>
+      <Sel label="Category" value={form.cat} onChange={v=>setForm(f=>({...f,cat:v}))}
+        opts={["Fixed","Variable","Utility","Staff","Other"].map(c=>({v:c,l:c}))}/>
+      <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+        <Btn v="ghost" onClick={()=>setShowM(false)}>{t.cancel}</Btn>
+        <Btn onClick={add}>{t.save}</Btn>
+      </div>
+    </Modal>
+
+    <Modal show={showB} onClose={()=>setShowB(false)} title="Set Monthly Budget" w={360}>
+      <Inp label="Monthly Budget (TZS)" value={budgetInp} onChange={setBudgetInp} type="number"/>
+      <Btn onClick={()=>{setBudget(+budgetInp);setShowB(false)}} style={{width:"100%"}}>{t.save}</Btn>
+    </Modal>
+  </div>
+};
+
+// ── REPORTS ──
+const Reports=({sales,exps,prods,t})=>{
+  const [period,setPeriod]=useState("weekly");
+  const days=period==="daily"?1:period==="weekly"?7:30;
+  const from=new Date(Date.now()-days*86400000);
+  const fSales=sales.filter(s=>new Date(s.date)>=from);
+  const fExps=exps.filter(e=>new Date(e.date)>=from);
+  const rev=fSales.reduce((a,b)=>a+b.amount,0);
+  const tex=fExps.reduce((a,b)=>a+b.amount,0);
+  const profit=rev-tex;
+  const margin=rev>0?((profit/rev)*100).toFixed(1):0;
+
+  const chartDays=Math.min(days,10);
+  const chartData=Array.from({length:chartDays},(_,i)=>{
+    const d=new Date(Date.now()-(chartDays-1-i)*Math.ceil(days/chartDays)*86400000);
+    const ds=d.toISOString().split("T")[0];
+    return{l:dayLabel(d.toISOString()),v:sales.filter(s=>s.date.startsWith(ds)).reduce((a,b)=>a+b.amount,0)};
+  });
+
+  const topProds=Object.entries(fSales.reduce((acc,s)=>{acc[s.pname]=(acc[s.pname]||0)+s.amount;return acc},{}))
+    .sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  return<div className="page">
+    <div style={{display:"flex",gap:10,marginBottom:20}}>
+      {["daily","weekly","monthly"].map(p=>(
+        <Btn key={p} v={period===p?"primary":"ghost"} onClick={()=>setPeriod(p)}>
+          {p==="daily"?t.daily:p==="weekly"?t.weekly:t.monthly}
+        </Btn>
+      ))}
+    </div>
+
+    <div style={{display:"flex",gap:14,flexWrap:"wrap",marginBottom:20}}>
+      {[
+        {l:t.rev,v:fmtC(rev),c:C.primary,icon:"💰"},
+        {l:t.tex,v:fmtC(tex),c:C.yellow,icon:"📤"},
+        {l:t.profit,v:fmtC(profit),c:profit>=0?C.accent:C.red,icon:"📊"},
+        {l:"Profit Margin",v:`${margin}%`,c:C.blue,icon:"📈"},
+        {l:"Transactions",v:fSales.length,c:C.purple,icon:"🧾"},
+      ].map(s=>(
+        <Card key={s.l} style={{flex:1,minWidth:120,textAlign:"center"}}>
+          <div style={{fontSize:28}}>{s.icon}</div>
+          <div style={{fontSize:18,fontWeight:900,color:s.c,margin:"6px 0 2px"}}>{s.v}</div>
+          <div style={{fontSize:11,color:C.muted,fontWeight:700}}>{s.l}</div>
+        </Card>
+      ))}
+    </div>
+
+    <div style={{display:"flex",gap:16,flexWrap:"wrap",marginBottom:16}}>
+      <Card style={{flex:2,minWidth:280}}>
+        <h3 style={{margin:"0 0 16px",color:C.dark,fontSize:15}}>📊 Revenue Trend</h3>
+        <MiniBar data={chartData} color={C.primary} h={120}/>
+      </Card>
+      <Card style={{flex:1,minWidth:220}}>
+        <h3 style={{margin:"0 0 14px",color:C.dark,fontSize:15}}>🏆 {t.top}</h3>
+        {topProds.map(([name,val],i)=>(
+          <div key={name} style={{marginBottom:10}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+              <span style={{fontSize:13,fontWeight:700}}>{name}</span>
+              <span style={{fontSize:12,color:C.primary,fontWeight:700}}>{fmtC(val)}</span>
+            </div>
+            <div style={{height:5,background:C.border,borderRadius:4}}>
+              <div style={{height:5,background:C.chart[i],borderRadius:4,
+                width:`${(val/topProds[0][1])*100}%`}}/>
+            </div>
+          </div>
+        ))}
+        {topProds.length===0&&<p style={{color:C.muted,fontSize:13}}>{t.nodata}</p>}
+      </Card>
+    </div>
+
+    {profit<0&&<Card style={{background:"#fef2f2",border:`2px solid ${C.red}`}}>
+      <h3 style={{color:C.red,margin:"0 0 8px"}}>🚨 {t.loss}</h3>
+      <p style={{margin:0,color:"#7f1d1d",fontSize:14}}>
+        This {period} shows a loss of <strong>{fmtC(Math.abs(profit))}</strong>.
+        Revenue ({fmtC(rev)}) is lower than expenses ({fmtC(tex)}). 
+        Consider reducing costs or increasing sales.
+      </p>
+    </Card>}
+  </div>
+};
+
+// ── NOTIFICATIONS ──
+const Notifs=({notifs,setNotifs,t})=>{
+  const typeCol=tp=>({warning:C.yellow,danger:C.red,success:C.accent,info:C.blue}[tp]||C.primary);
+  return<div className="page">
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+      <div style={{fontSize:13,color:C.muted}}>{notifs.filter(n=>!n.read).length} unread</div>
+      <div style={{display:"flex",gap:8}}>
+        <Btn v="ghost" s="sm" onClick={()=>setNotifs(p=>p.map(n=>({...n,read:true})))}>{t.mark}</Btn>
+        <Btn v="danger" s="sm" onClick={()=>setNotifs([])}>{t.clear}</Btn>
+      </div>
+    </div>
+    {notifs.length===0&&<Card style={{textAlign:"center",padding:40}}>
+      <div style={{fontSize:48,marginBottom:12}}>🔕</div>
+      <div style={{color:C.muted}}>No notifications</div>
+    </Card>}
+    {notifs.map(n=>(
+      <Card key={n.id} style={{display:"flex",alignItems:"flex-start",gap:14,marginBottom:10,
+        borderLeft:`4px solid ${typeCol(n.type)}`,background:n.read?"#fff":typeCol(n.type)+"08"}}>
+        <span style={{fontSize:24,flexShrink:0}}>{n.icon}</span>
+        <div style={{flex:1}}>
+          <div style={{fontWeight:n.read?400:700,fontSize:14}}>{n.msg}</div>
+          <div style={{fontSize:12,color:C.muted,marginTop:4}}>{new Date(n.date).toLocaleString()}</div>
+        </div>
+        {!n.read&&<Badge color={typeCol(n.type)}>New</Badge>}
+        <button onClick={()=>setNotifs(p=>p.map(x=>x.id===n.id?{...x,read:true}:x))}
+          style={{background:"none",border:"none",cursor:"pointer",color:C.muted,fontSize:20}}>✓</button>
+      </Card>
+    ))}
+  </div>
+};
+
+// ── USERS ──
+const UsersPage=({users,setUsers,user,t})=>{
+  const [showM,setShowM]=useState(false);
+  const [form,setForm]=useState({name:"",email:"",password:"",role:"staff",phone:""});
+  const add=()=>{
+    if(!form.name||!form.email)return;
+    setUsers(p=>[...p,{id:Date.now(),...form,active:true,lastLogin:null}]);
+    setShowM(false);setForm({name:"",email:"",password:"",role:"staff",phone:""});
+  };
+  const roleCol={admin:C.red,manager:C.blue,staff:C.primary};
+  return<div className="page">
+    {user.role==="admin"&&<div style={{marginBottom:16,display:"flex",justifyContent:"flex-end"}}>
+      <Btn onClick={()=>setShowM(true)}>+ {t.addUser}</Btn>
+    </div>}
+    <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
+      {users.map(u=>(
+        <Card key={u.id} style={{flex:1,minWidth:240}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:12}}>
+            <div style={{width:48,height:48,borderRadius:16,background:roleCol[u.role]+"20",
+              display:"flex",alignItems:"center",justifyContent:"center",fontSize:24}}>
+              {u.role==="admin"?"👑":u.role==="manager"?"📊":"👤"}
+            </div>
+            <Badge color={u.active?C.accent:C.muted}>{u.active?"Active":"Inactive"}</Badge>
+          </div>
+          <div style={{fontWeight:900,fontSize:16,color:C.dark,marginBottom:4}}>{u.name}</div>
+          <div style={{fontSize:13,color:C.muted,marginBottom:8}}>{u.email}</div>
+          <Badge color={roleCol[u.role]}>{u.role.toUpperCase()}</Badge>
+          {u.phone&&<div style={{fontSize:12,color:C.muted,marginTop:8}}>📞 {u.phone}</div>}
+          {user.role==="admin"&&u.id!==user.id&&(
+            <div style={{marginTop:10}}>
+              <Btn s="sm" v="ghost" onClick={()=>setUsers(p=>p.map(x=>x.id===u.id?{...x,active:!x.active}:x))}>
+                {u.active?"Disable":"Enable"}
+              </Btn>
+            </div>
+          )}
+        </Card>
+      ))}
+    </div>
+    <Modal show={showM} onClose={()=>setShowM(false)} title={t.addUser}>
+      <Inp label={t.name} value={form.name} onChange={v=>setForm(f=>({...f,name:v}))} req/>
+      <Inp label={t.email} value={form.email} onChange={v=>setForm(f=>({...f,email:v}))} type="email" req/>
+      <Inp label="Password" value={form.password} onChange={v=>setForm(f=>({...f,password:v}))} type="password"/>
+      <Inp label="Phone" value={form.phone} onChange={v=>setForm(f=>({...f,phone:v}))}/>
+      <Sel label={t.role} value={form.role} onChange={v=>setForm(f=>({...f,role:v}))}
+        opts={["admin","manager","staff"].map(r=>({v:r,l:r.charAt(0).toUpperCase()+r.slice(1)}))}/>
+      <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+        <Btn v="ghost" onClick={()=>setShowM(false)}>{t.cancel}</Btn>
+        <Btn onClick={add}>{t.save}</Btn>
+      </div>
+    </Modal>
+  </div>
+};
+
+// ── MAIN APP ──
+function App(){
+  const [lang,setLang]=useState("en");
+  const [user,setUser]=useState(null);
+  const [page,setPage]=useState("dash");
+  const [sidebar,setSidebar]=useState(true);
+  const [prods,setProds]=useState(PRODS);
+  const [sales,setSales]=useState(SALES);
+  const [exps,setExps]=useState(EXPS);
+  const [users,setUsers]=useState(USERS);
+  const [toast,setToast]=useState(null);
+  const [notifs,setNotifs]=useState([
+    {id:1,icon:"⚠️",msg:"Sukari 1kg — only 3 units remaining",type:"warning",date:new Date().toISOString(),read:false},
+    {id:2,icon:"🚨",msg:"Mafuta ya Kupikia is out of stock!",type:"danger",date:new Date(Date.now()-3600000).toISOString(),read:false},
+    {id:3,icon:"📈",msg:"Sales target reached this week!",type:"success",date:new Date(Date.now()-7200000).toISOString(),read:true},
+  ]);
+  const t=T[lang];
+
+  const showToast=useCallback((msg,type="success")=>{
+    setToast({msg,type});setTimeout(()=>setToast(null),3500);
+  },[]);
+
+  const addNotif=useCallback(n=>{
+    setNotifs(p=>[{id:Date.now(),...n,date:new Date().toISOString(),read:false},...p]);
+    showToast(n.msg,n.type);
+  },[showToast]);
+
+  const login=u=>{setUser(u);showToast(`${t.welcome}, ${u.name}! 🌿`,"success")};
+  const logout=()=>{setUser(null);setPage("dash")};
+  const unread=notifs.filter(n=>!n.read).length;
+
+  const nav=[
+    {id:"dash",icon:"🏠",l:t.dash},
+    {id:"inv",icon:"📦",l:t.inv},
+    {id:"sales",icon:"💳",l:t.sales},
+    {id:"exp",icon:"📤",l:t.exp},
+    {id:"rep",icon:"📊",l:t.rep},
+    {id:"notif",icon:"🔔",l:t.notif,badge:unread},
+    ...(user?.role==="admin"?[{id:"users",icon:"👥",l:t.users}]:[]),
+  ];
+
+  if(!user)return<Login onLogin={login} lang={lang} setLang={setLang}/>;
+
+  return<div style={{display:"flex",minHeight:"100vh",background:C.bg}}>
+    {/* Sidebar */}
+    <div style={{width:sidebar?240:64,flexShrink:0,background:C.dark,
+      transition:"width .25s",overflow:"hidden",display:"flex",flexDirection:"column",
+      boxShadow:"4px 0 20px rgba(0,0,0,.15)"}}>
+      <div style={{padding:"20px 16px",borderBottom:"1px solid rgba(255,255,255,.1)"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <span style={{fontSize:28,flexShrink:0}}>🌿</span>
+          {sidebar&&<div>
+            <div style={{color:"#fff",fontWeight:900,fontSize:14,lineHeight:1.2}}>{t.app}</div>
+            <div style={{color:"#86efac",fontSize:10,fontWeight:700}}>{t.tag}</div>
+          </div>}
+        </div>
+      </div>
+      <nav style={{flex:1,padding:"12px 8px",overflowY:"auto"}}>
+        {nav.map(item=>(
+          <button key={item.id} onClick={()=>setPage(item.id)} style={{
+            display:"flex",alignItems:"center",gap:12,width:"100%",
+            padding:"11px 12px",borderRadius:12,border:"none",cursor:"pointer",
+            background:page===item.id?"rgba(255,255,255,.15)":"transparent",
+            color:page===item.id?"#fff":"#86efac",
+            fontWeight:page===item.id?700:400,fontSize:14,transition:"all .15s",
+            marginBottom:2,whiteSpace:"nowrap",fontFamily:"inherit"
+          }}>
+            <span style={{fontSize:18,flexShrink:0}}>{item.icon}</span>
+            {sidebar&&<span>{item.l}</span>}
+            {item.badge>0&&<span style={{marginLeft:"auto",background:C.red,color:"#fff",
+              borderRadius:20,padding:"1px 7px",fontSize:11,fontWeight:900,flexShrink:0}}>{item.badge}</span>}
+          </button>
+        ))}
+      </nav>
+      <div style={{padding:"12px 8px",borderTop:"1px solid rgba(255,255,255,.1)"}}>
+        {sidebar&&<div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",
+          marginBottom:8,background:"rgba(255,255,255,.06)",borderRadius:10}}>
+          <span style={{fontSize:20}}>{user.role==="admin"?"👑":user.role==="manager"?"📊":"👤"}</span>
+          <div>
+            <div style={{color:"#fff",fontWeight:700,fontSize:13}}>{user.name}</div>
+            <div style={{color:"#86efac",fontSize:10,textTransform:"uppercase"}}>{user.role}</div>
+          </div>
+        </div>}
+        <div style={{display:"flex",gap:5,marginBottom:6,flexDirection:sidebar?"row":"column"}}>
+          {["en","sw"].map(l=>(
+            <button key={l} onClick={()=>setLang(l)} style={{flex:1,padding:"5px 4px",borderRadius:8,border:"none",
+              background:lang===l?C.accent:"rgba(255,255,255,.08)",
+              color:lang===l?C.dark:"#86efac",fontWeight:700,fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>
+              {l.toUpperCase()}
+            </button>
+          ))}
+        </div>
+        <button onClick={logout} style={{display:"flex",alignItems:"center",gap:8,width:"100%",
+          padding:"10px 12px",borderRadius:10,border:"none",cursor:"pointer",
+          background:"transparent",color:"#f87171",fontWeight:700,fontSize:13,fontFamily:"inherit"}}>
+          <span>🚪</span>{sidebar&&t.logout}
+        </button>
+      </div>
+    </div>
+
+    {/* Main */}
+    <div style={{flex:1,display:"flex",flexDirection:"column",minWidth:0}}>
+      {/* Topbar */}
+      <div style={{background:"#fff",padding:"14px 24px",borderBottom:`1px solid ${C.border}`,
+        display:"flex",alignItems:"center",gap:16,position:"sticky",top:0,zIndex:100,
+        boxShadow:"0 2px 8px rgba(0,0,0,.05)"}}>
+        <button onClick={()=>setSidebar(o=>!o)} style={{background:"none",border:"none",
+          fontSize:22,cursor:"pointer",color:C.primary,padding:4}}>☰</button>
+        <div style={{flex:1}}>
+          <div style={{fontWeight:900,fontSize:18,color:C.dark}}>
+            {nav.find(n=>n.id===page)?.icon} {nav.find(n=>n.id===page)?.l}
+          </div>
+          <div style={{fontSize:12,color:C.muted}}>{new Date().toLocaleDateString("en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}</div>
+        </div>
+        <button onClick={()=>setPage("notif")} style={{position:"relative",background:"none",border:"none",fontSize:22,cursor:"pointer"}}>
+          🔔
+          {unread>0&&<span style={{position:"absolute",top:-4,right:-4,background:C.red,color:"#fff",
+            borderRadius:20,width:18,height:18,fontSize:10,fontWeight:900,
+            display:"flex",alignItems:"center",justifyContent:"center"}}>{unread}</span>}
+        </button>
+      </div>
+
+      {/* Content */}
+      <div style={{flex:1,padding:24,overflowY:"auto"}}>
+        {page==="dash"&&<Dashboard prods={prods} sales={sales} exps={exps} notifs={notifs} t={t}/>}
+        {page==="inv"&&<Inventory prods={prods} setProds={setProds} addNotif={addNotif} t={t}/>}
+        {page==="sales"&&<Sales sales={sales} setSales={setSales} prods={prods} setProds={setProds} addNotif={addNotif} user={user} t={t}/>}
+        {page==="exp"&&<Expenses exps={exps} setExps={setExps} addNotif={addNotif} t={t}/>}
+        {page==="rep"&&<Reports sales={sales} exps={exps} prods={prods} t={t}/>}
+        {page==="notif"&&<Notifs notifs={notifs} setNotifs={setNotifs} t={t}/>}
+        {page==="users"&&<UsersPage users={users} setUsers={setUsers} user={user} t={t}/>}
+      </div>
+    </div>
+
+    {toast&&<Toast msg={toast.msg} type={toast.type} onClose={()=>setToast(null)}/>}
+  </div>
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
